@@ -1,0 +1,405 @@
+--csse
+--au9Tah3x
+--mysql -u root -p
+
+CREATE DATABASE SuperCoolDatabase;
+
+USE SuperCoolDatabase;
+
+CREATE TABLE IF NOT EXISTS Songs (
+ SongId INT UNSIGNED NOT NULL AUTO_INCREMENT,
+ Url VARCHAR(1000) NOT NULL DEFAULT '',
+ Title VARCHAR(30) NOT NULL DEFAULT '',
+ Album VARCHAR(30) NOT NULL DEFAULT '',
+ Duration INT UNSIGNED NOT NULL DEFAULT 0,
+ Plays INT UNSIGNED NOT NULL DEFAULT 0,
+ PRIMARY KEY (SongId)
+);
+
+CREATE TABLE IF NOT EXISTS Stations (
+ StationId  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+ StationName   VARCHAR(30)  NOT NULL DEFAULT '',
+ CreationDate DATE   NOT NULL, 
+ LastListened DATE   NOT NULL,
+ OwnedBy INT UNSIGNED  NOT NULL,
+ FOREIGN KEY (OwnedBy) REFERENCES Users (UserId)
+   ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (StationId)
+);
+
+CREATE TABLE IF NOT EXISTS Users (
+ UserId  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+ UserName  VARCHAR(30)  NOT NULL DEFAULT '',
+ Password VARCHAR(30)  NOT NULL DEFAULT 'password',
+ PRIMARY KEY (UserId)
+);
+
+CREATE TABLE IF NOT EXISTS Artists (
+ ArtistId INT UNSIGNED NOT NULL AUTO_INCREMENT,
+ ArtistName  VARCHAR(30)  NOT NULL DEFAULT '',
+ PRIMARY KEY (ArtistId)
+);
+
+CREATE TABLE IF NOT EXISTS RecordedBy (
+ ArtistId INT UNSIGNED NOT NULL,
+ SongId  INT UNSIGNED NOT NULL,
+ FOREIGN KEY (ArtistId) REFERENCES Artists (ArtistId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ FOREIGN KEY (SongId) REFERENCES Songs (SongId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (ArtistId, SongId)
+);
+
+CREATE TABLE IF NOT EXISTS HaveSong (
+ StationId INT UNSIGNED NOT NULL,
+ SongId  INT UNSIGNED NOT NULL,
+ FOREIGN KEY (StationId) REFERENCES Stations (StationId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ FOREIGN KEY (SongId) REFERENCES Songs (SongId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (StationId, SongId)
+);
+
+CREATE TABLE IF NOT EXISTS LikeSong (
+ SongId  INT UNSIGNED NOT NULL,
+ UserId  INT UNSIGNED NOT NULL,
+ FOREIGN KEY (SongId) REFERENCES Songs (SongId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ FOREIGN KEY (UserId) REFERENCES Users (UserId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (SongId, UserId)
+);
+
+CREATE TABLE IF NOT EXISTS DislikeSong (
+ SongId  INT UNSIGNED NOT NULL,
+ UserId  INT UNSIGNED NOT NULL,
+ FOREIGN KEY (SongId) REFERENCES Songs (SongId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ FOREIGN KEY (UserId) REFERENCES Users (UserId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (SongId, UserId)
+);
+
+CREATE TABLE IF NOT EXISTS LikeArtist (
+ ArtistId INT UNSIGNED NOT NULL,
+ UserId  INT UNSIGNED NOT NULL,
+ FOREIGN KEY (ArtistId) REFERENCES Artists (ArtistId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ FOREIGN KEY (UserId) REFERENCES Users (UserId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (ArtistId, UserId)
+);
+
+CREATE TABLE IF NOT EXISTS HasGenre (
+ SongId  INT UNSIGNED NOT NULL,
+ GenreName VARCHAR(50)  NOT NULL DEFAULT '',
+ FOREIGN KEY (SongId) REFERENCES Songs (SongId)
+  ON DELETE CASCADE ON UPDATE CASCADE,
+ PRIMARY KEY (SongId, GenreName)
+);
+
+
+INSERT INTO Songs (Url, Title, Album, Duration)
+ VALUES ('http://www.crescendo.com', 'As I Am', 'Train of Thought', 5);
+ 
+INSERT INTO Songs (Url, Title, Album, Duration)
+ VALUES ('http://www.crescendo.com', 'Graduation', 'Graduation', 5);
+ 
+INSERT INTO Songs (Url, Title, Album, Duration)
+ VALUES ('http://www.crescendo.com', 'Black Bear', 'The Cinnamon Phase', 5);
+ 
+INSERT INTO Songs (Url, Title, Album, Duration)
+ VALUES ('http://www.crescendo.com', 'Give', 'Give', 5);
+ 
+INSERT INTO Songs (Url, Title, Album, Duration)
+ VALUES ('http://www.crescendo.com', 'Good Morning', 'Graduation', 5);
+ 
+INSERT INTO Users (UserName, Password)
+ VALUES ('User', 'Password');
+ 
+INSERT INTO Stations (StationName, CreationDate, LastListened, OwnedBy)
+  VALUES ('TestStation', CURDATE(), CURDATE(), 1);
+  
+INSERT INTO HasGenre (SongId, GenreName)
+  VALUES (1, 'Rock');
+ 
+INSERT INTO HasGenre (SongId, GenreName)
+  VALUES (2, 'Rap');
+  
+INSERT INTO HasGenre (SongId, GenreName)
+  VALUES (3, 'Indie');
+  
+INSERT INTO HasGenre (SongId, GenreName)
+  VALUES (4, 'Rock');
+ 
+INSERT INTO HasGenre (SongId, GenreName)
+  VALUES (5, 'Rap');
+  
+INSERT INTO Artists (ArtistName)
+  VALUES ('Black Bear');
+  
+INSERT INTO RecordedBy (ArtistId, SongId)
+  VALUES (1, 3);
+ 
+ --To Get All Urls given YourStationID:
+ 
+ SELECT  Url
+ FROM  HaveSong AS t1 INNER JOIN Songs AS t2 ON (t1.SongId = t2.SongId AND t1.StationId = (SELECT StationId FROM Stations WHERE StationName = [PUT STATION NAME HERE] AND OwnedBy = [PUT OWNER ID HERE]))
+ ;
+ 
+ 
+--***STORED_PROCEDURE_CREATION***
+
+--First, query all songs in song table of that genre, then cursor through, selecting first so the song isn't added twice, and then inserting into have song StationiD and songId
+DELIMITER //
+DROP PROCEDURE AddSongToStationGenre //
+CREATE PROCEDURE AddSongToStationGenre(IN statname VARCHAR(30), IN gname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM HasGenre WHERE GenreName = gname;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 0 THEN
+      INSERT INTO HaveSong (StationId, SongId) VALUES (station_id, song_id);
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+DELIMITER //
+DROP PROCEDURE AddSongToStationArtist //
+CREATE PROCEDURE AddSongToStationArtist(IN statname VARCHAR(30), IN aname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM RecordedBy WHERE ArtistId = (SELECT ArtistId FROM Artists WHERE ArtistName = aname);
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 0 THEN
+      INSERT INTO HaveSong (StationId, SongId) VALUES (station_id, song_id);
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+
+DELIMITER //
+DROP PROCEDURE AddSongToStationAlbum //
+CREATE PROCEDURE AddSongToStationAlbum(IN statname VARCHAR(30), IN aname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM Songs WHERE Album = aname;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 0 THEN
+      INSERT INTO HaveSong (StationId, SongId) VALUES (station_id, song_id);
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+
+DELIMITER //
+DROP PROCEDURE RemoveSongFromStationAlbum //
+CREATE PROCEDURE RemoveSongFromStationAlbum(IN statname VARCHAR(30), IN aname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM Songs WHERE Album = aname;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 1 THEN
+      DELETE FROM HaveSong WHERE StationId = station_id AND SongId = song_id;
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+
+DELIMITER //
+DROP PROCEDURE RemoveSongFromStationArtist //
+CREATE PROCEDURE RemoveSongFromStationArtist(IN statname VARCHAR(30), IN aname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM RecordedBy WHERE ArtistId = (SELECT ArtistId FROM Artists WHERE ArtistName = aname);
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 1 THEN
+      DELETE FROM HaveSong WHERE StationId = station_id AND SongId = song_id;
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+
+DELIMITER //
+DROP PROCEDURE RemoveSongFromStationGenre //
+CREATE PROCEDURE RemoveSongFromStationGenre(IN statname VARCHAR(30), IN gname VARCHAR(50))
+ BEGIN
+ 
+  DECLARE song_id INT UNSIGNED;
+  DECLARE station_id INT UNSIGNED;
+  DECLARE finished INTEGER DEFAULT 0;
+  DECLARE songcursor CURSOR FOR SELECT SongId FROM HasGenre WHERE GenreName = gname;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = 1;
+  
+  SELECT StationId INTO station_id FROM Stations WHERE StationName = statname;
+
+  OPEN songcursor;
+  
+  get_song: LOOP
+    FETCH songcursor INTO song_id;
+   
+    IF finished = 1 THEN
+      LEAVE get_song;
+    END IF;
+
+    IF (SELECT COUNT(SongId) AS Counts FROM HaveSong WHERE SongId = song_id AND StationId = station_id) = 1 THEN
+      DELETE FROM HaveSong WHERE StationId = station_id AND SongId = song_id;
+    END IF;
+  
+  END LOOP get_song;
+  
+  CLOSE songcursor;
+  
+ END //
+
+DELIMITER ;
+
+
+--Not for general use, backend tool to fill songs into the database.
+DELIMITER //
+DROP PROCEDURE InsertMetaData //
+CREATE PROCEDURE InsertMetaData(IN songUrl VARCHAR(1000), IN songTitle VARCHAR(30), IN songAlbum VARCHAR(50), IN songDuration INT UNSIGNED, IN songArtist VARCHAR(30), IN songGenre VARCHAR(50))
+ BEGIN
+  
+	DECLARE song_id INT UNSIGNED;
+	DECLARE artist_id INT UNSIGNED;
+	
+    INSERT INTO Songs (Url, Title, Album, Duration)
+	  VALUES (songUrl, songTitle, songAlbum, songDuration);
+	
+	IF (SELECT COUNT(ArtistId) AS counts FROM Artists WHERE ArtistName = songArtist) = 0 THEN
+	  INSERT INTO Artists (ArtistName)
+	    VALUES (songArtist);
+	END IF;
+	  
+	SELECT SongId INTO song_id FROM Songs WHERE Url = songUrl AND Title = songTitle AND Album = songAlbum AND Duration = songDuration;
+	SELECT ArtistId INTO artist_id FROM Artists WHERE ArtistName = songArtist;
+	
+	INSERT INTO HasGenre (SongId, GenreName)
+	  VALUES (song_id, songGenre);
+	  
+	INSERT INTO RecordedBy (SongId, ArtistId)
+	  VALUES (song_id, artist_id);
+  
+ END //
+
+DELIMITER ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

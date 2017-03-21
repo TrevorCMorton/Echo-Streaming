@@ -1,0 +1,43 @@
+CreateStationGenreIntent lay me down some sweet {Genre}
+CreateStationGenreIntent hit me up with some {Genre}
+CreateStationGenreIntent i could really dig some {Genre}
+
+CreateStationArtistIntent lay me down some sweet {Artist}
+CreateStationArtistIntent hit me up with some {Artist}
+CreateStationArtistIntent i could really dig some {Artist}
+
+CreateStationAlbumIntent lay me down some sweet {Album}
+CreateStationAlbumIntent hit me up with some {Album}
+CreateStationAlbumIntent i could really dig some {Album}
+
+AddToStationGenreIntent put in some dank {Genre}
+AddToStationGenreIntent put in some {Genre}
+AddToStationGenreIntent slide in some sweet {Genre}
+AddToStationGenreIntent slap on some {Genre}
+
+AddToStationArtistIntent put in some dank {Artist}
+AddToStationArtistIntent put in some {Artist}
+AddToStationArtistIntent slide in some sweet {Artist}
+AddToStationArtistIntent slap on some {Artist}
+
+AddToStationAlbumIntent put in some dank {Album}
+AddToStationAlbumIntent put in some {Album}
+AddToStationAlbumIntent slide in some sweet {Album}
+AddToStationAlbumIntent slap on some {Album}
+
+RemoveFromStationArtistIntent get rid of this trash {Artist}
+RemoveFromStationArtistIntent i dont wanna hear no more {Artist} on here
+
+RemoveFromStationGenreIntent get rid of this trash {Genre}
+RemoveFromStationGenreIntent i dont wanna hear no more {Genre} on here
+
+RemoveFromStationAlbumIntent get rid of this trash {Album}
+RemoveFromStationAlbumIntent i dont wanna hear no more {Album} on here
+
+RenameCurrentStationIntent rename my current station
+
+LikeCurrentSongIntent this is fire
+
+DislikeCurrentSongIntent this sucks
+
+LikeCurrentArtistIntent this artist is the bomb

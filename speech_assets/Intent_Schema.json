@@ -1,0 +1,118 @@
+{
+  "intents": [
+    {
+      "intent": "AMAZON.PauseIntent"
+    },
+    {
+      "intent": "PlaylistDemoIntent"
+    },
+    {
+      "intent": "TestDatabaseIntent",
+      "slots": [
+        {
+          "name": "Album",
+          "type": "LIST_OF_ALBUMS"
+        }
+      ]
+    },
+	{
+      "intent": "CreateStationGenreIntent",
+	  "slots": [
+	  {
+		  "name": "Genre",
+		  "type": "LIST_OF_GENRES"
+	  }
+	  ]
+    },
+	{
+      "intent": "CreateStationArtistIntent",
+	  "slots": [
+	  {
+		  "name": "Artist",
+		  "type": "LIST_OF_ARTISTS"
+	  }
+	  ]
+    },
+	{
+      "intent": "CreateStationAlbumIntent",
+	  "slots": [
+	  {
+		  "name": "Album",
+		  "type": "LIST_OF_ALBUMS"
+	  }
+	  ]
+    },
+	{
+      "intent": "AddToStationGenreIntent",
+	  "slots": [
+	  {
+		  "name": "Genre",
+		  "type": "LIST_OF_GENRES"
+	  }
+	  ]
+    },
+	{
+      "intent": "AddToStationArtistIntent",
+	  "slots": [
+	  {
+		  "name": "Artist",
+		  "type": "LIST_OF_ARTISTS"
+	  }
+	  ]
+    },
+	{
+      "intent": "AddToStationAlbumIntent",
+	  "slots": [
+	  {
+		  "name": "Album",
+		  "type": "LIST_OF_ALBUMS"
+	  }
+	  ]
+    },
+	{
+      "intent": "RemoveFromStationArtistIntent",
+	  "slots": [
+	  {
+		  "name": "Artist",
+		  "type": "LIST_OF_ARTISTS"
+	  }
+	  ]
+    },
+	{
+      "intent": "RemoveFromStationGenreIntent",
+	  "slots": [
+	  {
+		  "name": "Genre",
+		  "type": "LIST_OF_GENRES"
+	  }
+	  ]
+    },
+	{
+      "intent": "RemoveFromStationAlbumIntent",
+	  "slots": [
+	  {
+		  "name": "Album",
+		  "type": "LIST_OF_ALBUMS"
+	  }
+	  ]
+    },
+	{
+      "intent": "RenameCurrentStationIntent"
+    },
+    {
+      "intent": "LikeCurrentSongIntent"
+    },
+    {
+      "intent": "DislikeCurrentSongIntent"
+    },
+    {
+      "intent": "LikeCurrentArtistIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    },
+    {
+      "intent": "AMAZON.ResumeIntent"
+    }
+  ]
+}
